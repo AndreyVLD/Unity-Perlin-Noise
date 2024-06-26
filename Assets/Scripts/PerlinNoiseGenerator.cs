@@ -37,10 +37,10 @@ public class PerlinNoiseGenerator : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                float xCoord = ((float)x - width/2) / width * scale + offsetX;
-                float yCoord = ((float)y - height/2) / height * scale + offsetY;
+//                float xCoord = ((float)x - width/2) / width* scale + offsetX;
+//                float yCoord = ((float)y - height/2) / height* scale + offsetY;
 
-                texture.SetPixel(x, y, GetNoiseColor(xCoord, yCoord));
+                texture.SetPixel(x, y, GetBilinearInterpolatedColor(x, y));
 
             }
         }
@@ -58,18 +58,39 @@ public class PerlinNoiseGenerator : MonoBehaviour
         {
             float zoomFactor = 1f - scroll * zoomSpeed * Time.deltaTime;
             scale *= zoomFactor;
-            scale = Mathf.Clamp(scale * zoomFactor, 1f, 100f);
         }
     }
 
-    Color GetNoiseColor(float xCoord, float yCoord)
+    Color GetColorFromValue(float value)
     {
-        float sample = Mathf.PerlinNoise(xCoord, yCoord);
+
         foreach(ColorInterval interval in colorIntervals)
         {
-            if (sample >= interval.start && sample < interval.end)
-                return Color.Lerp(interval.colorStart, interval.colorEnd, (sample - interval.start) / (interval.end - interval.start));
+            if (value >= interval.start && value < interval.end)
+                return Color.Lerp(interval.colorStart, interval.colorEnd, (value - interval.start) / (interval.end - interval.start));
         }
         return new Color(0.5f,0.5f,0.5f);
+    }
+
+    Color GetBilinearInterpolatedColor(int xCoord, int yCoord)
+    {
+        float x0 = (float)xCoord / width * scale + offsetX;
+        float y0 = (float)yCoord / height * scale + offsetY;
+        float x1 = (float)(xCoord + 1) / width * scale + offsetX;
+        float y1 = (float)(yCoord + 1) / height * scale + offsetY;
+
+        float sx = x0 - Mathf.Floor(x0);
+        float sy = y0 - Mathf.Floor(y0);
+
+        Color n00 = GetColorFromValue(Mathf.PerlinNoise(x0 , y0));
+        Color n10 = GetColorFromValue(Mathf.PerlinNoise(x1, y0));
+        Color n01 = GetColorFromValue(Mathf.PerlinNoise(x0, y1));
+        Color n11 = GetColorFromValue(Mathf.PerlinNoise(x1, y1));
+
+        Color ix0 = Color.Lerp(n00, n10, sx);
+        Color ix1 = Color.Lerp(n01, n11, sx);
+        Color value = Color.Lerp(ix0, ix1, sy);
+
+        return value;
     }
 }
