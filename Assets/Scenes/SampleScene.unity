@@ -159,6 +159,27 @@ MonoBehaviour:
   scale: 4
   offsetX: 100
   offsetY: 100
+  colorIntervals:
+  - start: 0
+    end: 0.3
+    colorStart: {r: 0.2, g: 0.32941177, b: 0.65882355, a: 1}
+    colorEnd: {r: 0.15686275, g: 1, b: 1, a: 0}
+  - start: 0.3
+    end: 0.4
+    colorStart: {r: 0.84313726, g: 0.7529412, b: 0.61960787, a: 1}
+    colorEnd: {r: 1, g: 0.9490196, b: 0.75686276, a: 0}
+  - start: 0.4
+    end: 0.6
+    colorStart: {r: 0.08627451, g: 0.70980394, b: 0.5529412, a: 1}
+    colorEnd: {r: 0.4627451, g: 0.9372549, b: 0.4862745, a: 0}
+  - start: 0.6
+    end: 0.75
+    colorStart: {r: 0.8235295, g: 0.7058824, b: 0.54901963, a: 1}
+    colorEnd: {r: 0.5882353, g: 0.27450982, b: 0.039215688, a: 1}
+  - start: 0.75
+    end: 1
+    colorStart: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    colorEnd: {r: 1, g: 1, b: 1, a: 1}
 --- !u!23 &63177772
 MeshRenderer:
   m_ObjectHideFlags: 0
