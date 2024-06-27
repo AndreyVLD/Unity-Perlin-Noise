@@ -1,6 +1,7 @@
 ﻿#ifndef NOISE_UTILS_INCLUDED
 #define NOISE_UTILS_INCLUDED
 
+// Utility functions for noise generation
 float wglnoise_mod(float x, float y)
 {
     return x - y * floor(x / y);
@@ -61,6 +62,7 @@ float4 wglnoise_permute(float4 x)
     return wglnoise_mod289((x * 34 + 1) * x);
 }
 
+// Classic Perlin noise implementation
 float ClassicNoise_impl(float2 pi0, float2 pf0, float2 pi1, float2 pf1)
 {
     pi0 = wglnoise_mod289(pi0); // To avoid truncation effects in permutation
@@ -120,7 +122,7 @@ float unity_gradientNoise(float2 p)
     return lerp(lerp(d00, d01, fp.y), lerp(d10, d11, fp.y), fp.x);
 }
 
-// Unity Perlin Noise
+// Unity Gradient Noise
 float Unity_GradientNoise_float(float2 UV)
 {
    return unity_gradientNoise(UV) + 0.5;

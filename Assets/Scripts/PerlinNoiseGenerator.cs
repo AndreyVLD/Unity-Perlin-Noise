@@ -23,16 +23,18 @@ public class PerlinNoiseGenerator : MonoBehaviour
     public float lacunarity = 3.0f;
     public ColorInterval[] colorIntervals;
 
+    // Compute Shader that will generate the noise
     [Header("Shader")]
     public ComputeShader computeShader;
 
     private float offsetX = 100f;
     private float offsetY = 100f;
-    private ComputeBuffer buffer;
     private int type = 0;
     private int kernelHandle;
     private float scale = 4;
 
+    // Buffer that will store the color intervals for the compute shader
+    private ComputeBuffer buffer;
 
     public RenderTexture renderTexture;
     private MeshRenderer rend;
@@ -41,14 +43,18 @@ public class PerlinNoiseGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Get the mesh renderer and set the render texture to it
         rend = GetComponent<MeshRenderer>();
 
         renderTexture = new RenderTexture(width, height, 24);
         renderTexture.enableRandomWrite = true;
         renderTexture.Create();
         rend.material.mainTexture = renderTexture;
+
+        // Find the kernel handle for the compute shader
         kernelHandle = computeShader.FindKernel("CSMain");
 
+        // Compute the buffer data - this contains the color intervals
         ComputeBufferData();
         GenerateNoise();
     }
@@ -66,7 +72,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
     // Generate the noise using the compute shader
     void GenerateNoise()
     {
-
+        // Set the input parameters for the compute shader
         computeShader.SetInt("width", width);
         computeShader.SetInt("height", height);
         computeShader.SetFloat("scale", scale);
@@ -81,8 +87,11 @@ public class PerlinNoiseGenerator : MonoBehaviour
         computeShader.SetTexture(kernelHandle, "Result", renderTexture);
         computeShader.SetBuffer(kernelHandle, "ColorIntervals", buffer);
 
+        // Compute the number of thread groups: width and height divided by number of workers (8 by 8 workers)
         int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
         int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
+
+        // Dispatch the compute shader
         computeShader.Dispatch(kernelHandle, threadGroupsX, threadGroupsY, 1);
     }
 

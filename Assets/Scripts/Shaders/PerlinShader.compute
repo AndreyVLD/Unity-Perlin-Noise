@@ -5,6 +5,7 @@
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 
+// ColorInterval struct to store the color intervals
 struct ColorInterval
 {
     float start;
@@ -13,9 +14,15 @@ struct ColorInterval
     float4 colorEnd;
 };
 
+// Data that will be received from the C# script
+
+// RWTexture2D<float4> is a type of texture that can be read and written to
 RWTexture2D<float4> Result;
+
+// RWStructuredBuffer<ColorInterval> is a type of array that can be read and written to
 RWStructuredBuffer<ColorInterval> ColorIntervals;
 
+// Simple variables that will be received from the C# script
 uint width;
 uint height;
 float scale;
@@ -76,7 +83,7 @@ float4 GetColorFromValue(float value)
     return float4(0, 0, 0, 1);
 }
 
-
+// The main function that will be called by the C# script
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
