@@ -31,7 +31,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
     private ComputeBuffer buffer;
     private int type = 0;
     private int kernelHandle;
-    private float scale = 20;
+    private float scale = 4;
 
 
     public RenderTexture renderTexture;

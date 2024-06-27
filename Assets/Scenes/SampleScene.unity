@@ -157,9 +157,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 1024
   height: 1024
-  scale: 4
   translateSpeed: 5
-  zoomSpeed: 30.9
+  zoomSpeed: 30
   octaves: 9
   persistence: 0.5
   lacunarity: 3
