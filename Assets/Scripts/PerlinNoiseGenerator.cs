@@ -5,7 +5,6 @@ public class PerlinNoiseGenerator : MonoBehaviour
     [Header("General Settings")]
     public int width = 256;
     public int height = 256;
-    public float scale = 20;
 
     [Header("Speed Settings")]
     [Range(1, 100)]
@@ -16,20 +15,23 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
 
     [Header("Noise Settings")]
-    [Range(1, 9)]
+    [Range(1, 10)]
     public int octaves = 9;
+    [Range(0, 1)]
     public float persistence = 0.5f;
+    [Range(0, 10)]
     public float lacunarity = 3.0f;
     public ColorInterval[] colorIntervals;
 
     [Header("Shader")]
     public ComputeShader computeShader;
 
-
     private float offsetX = 100f;
     private float offsetY = 100f;
     private ComputeBuffer buffer;
     private int type = 0;
+    private int kernelHandle;
+    private float scale = 20;
 
 
     public RenderTexture renderTexture;
@@ -45,6 +47,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         renderTexture.enableRandomWrite = true;
         renderTexture.Create();
         rend.material.mainTexture = renderTexture;
+        kernelHandle = computeShader.FindKernel("CSMain");
 
         ComputeBufferData();
         GenerateNoise();
@@ -52,7 +55,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
+    {   
         if (UserInput())
         {
             GenerateNoise();
@@ -63,8 +66,6 @@ public class PerlinNoiseGenerator : MonoBehaviour
     // Generate the noise using the compute shader
     void GenerateNoise()
     {
-
-        int kernelHandle = computeShader.FindKernel("CSMain");
 
         computeShader.SetInt("width", width);
         computeShader.SetInt("height", height);
@@ -105,7 +106,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         {
             float zoomFactor = 1f - scroll * zoomSpeed * Time.deltaTime;
             scale *= zoomFactor;
-            scale = Mathf.Clamp(scale, 1f, 100f);
+            scale = Mathf.Clamp(scale, 0.1f, 500f);
             changed = true;
         }
 
