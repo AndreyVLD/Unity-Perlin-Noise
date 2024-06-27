@@ -29,6 +29,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
     private float offsetX = 100f;
     private float offsetY = 100f;
     private ComputeBuffer buffer;
+    private int type = 0;
 
 
     public RenderTexture renderTexture;
@@ -44,8 +45,8 @@ public class PerlinNoiseGenerator : MonoBehaviour
         renderTexture.enableRandomWrite = true;
         renderTexture.Create();
         rend.material.mainTexture = renderTexture;
-        ComputeBufferData();
 
+        ComputeBufferData();
         GenerateNoise();
     }
 
@@ -65,7 +66,6 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
         int kernelHandle = computeShader.FindKernel("CSMain");
 
-        // ComputeBufferData();
         computeShader.SetInt("width", width);
         computeShader.SetInt("height", height);
         computeShader.SetFloat("scale", scale);
@@ -75,6 +75,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         computeShader.SetFloat("persistence", persistence);
         computeShader.SetFloat("lacunarity", lacunarity);
         computeShader.SetFloat("numColors", colorIntervals.Length);
+        computeShader.SetFloat("type", type);
 
         computeShader.SetTexture(kernelHandle, "Result", renderTexture);
         computeShader.SetBuffer(kernelHandle, "ColorIntervals", buffer);
@@ -111,6 +112,12 @@ public class PerlinNoiseGenerator : MonoBehaviour
         return changed;
     }
 
+    public void SetType(int type)
+    {
+        this.type = type;
+        GenerateNoise();
+    }
+
     void ComputeBufferData()
     {
         int totalSize = 2 * sizeof(float) + 2 * 4 * sizeof(float);
@@ -118,6 +125,8 @@ public class PerlinNoiseGenerator : MonoBehaviour
         buffer.SetData(colorIntervals);
     }
 
+
+    // This code is not used but it is a good example of how to generate the noise using the CPU
     Color GetColorFromValue(float value)
     {
 

@@ -25,6 +25,20 @@ uint octaves;
 float persistence;
 float lacunarity;
 uint numColors;
+uint type;
+
+float GetNoise(float2 input)
+{
+    switch (type)
+    {
+        case 0:
+            return Unity_GradientNoise_float(input);
+        case 1:
+            return abs(ClassicNoise(input) + 0.2);
+        default:
+            return Unity_GradientNoise_float(input);
+    }
+}
 
 
 float FBM(float x, float y)
@@ -36,7 +50,7 @@ float FBM(float x, float y)
 
     for (uint i = 0; i < octaves; i++)
     {
-        total += Unity_GradientNoise_float(float2(x * frequency, y * frequency)) * amplitude;
+        total += GetNoise(float2(x * frequency, y * frequency)) * amplitude;
 
         maxValue += amplitude;
 
@@ -46,6 +60,7 @@ float FBM(float x, float y)
 
     return total / maxValue;
 }
+
 
 float4 GetColorFromValue(float value)
 {
