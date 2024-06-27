@@ -2,19 +2,30 @@ using UnityEngine;
 
 public class PerlinNoiseGenerator : MonoBehaviour
 {
+    [Header("General Settings")]
     public int width = 256;
     public int height = 256;
-
     public float scale = 20;
+
+    [Header("Speed Settings")]
+    [Range(1, 100)]
     public float translateSpeed = 10f;
+
+    [Range(1, 100)]
     public float zoomSpeed = 5f;
 
 
-    public float offsetX = 100f;
-    public float offsetY = 100f;
-
+    [Header("Noise Settings")]
+    [Range(1, 9)]
+    public int octaves = 9;
+    public float persistence = 0.5f;
+    public float lacunarity = 3.0f;
     public ColorInterval[] colorIntervals;
 
+
+    private float offsetX = 100f;
+    private float offsetY = 100f;
+    private Color[] colorCache;
     private MeshRenderer rend;
     private Texture2D texture;
 
@@ -25,40 +36,65 @@ public class PerlinNoiseGenerator : MonoBehaviour
         rend = GetComponent<MeshRenderer>();
         texture = new Texture2D(width, height);
         rend.material.mainTexture = texture;
-
+        colorCache = new Color[width * height];
+        GenerateNoise();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (UserInput())
+        {
+            GenerateNoise();
+        }
 
-        userInput();
+    }
+  
+    void GenerateNoise()
+    {
+       
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-//                float xCoord = ((float)x - width/2) / width* scale + offsetX;
-//                float yCoord = ((float)y - height/2) / height* scale + offsetY;
+                float xCoord = ((float)x - width / 2) / width * scale + offsetX;
+                float yCoord = ((float)y - height / 2) / height * scale + offsetY;
 
-                texture.SetPixel(x, y, GetBilinearInterpolatedColor(x, y));
+                float sample = FBM(xCoord, yCoord);
+                Color noiseColor = GetColorFromValue(sample);
+                colorCache[x + y * width] = noiseColor;
 
             }
         }
-
+        texture.SetPixels(colorCache);
         texture.Apply();
     }
 
-    void userInput()
+    bool UserInput()
     {
-        offsetX += Input.GetAxis("Horizontal") * Time.deltaTime * translateSpeed;
-        offsetY += Input.GetAxis("Vertical") * Time.deltaTime * translateSpeed;
+        bool changed = false;
+
+        float moveX  = Input.GetAxis("Horizontal") * Time.deltaTime * translateSpeed;
+        float moveY = Input.GetAxis("Vertical") * Time.deltaTime * translateSpeed;
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
+
+        if (moveX != 0 || moveY != 0)
+        {
+            offsetX += moveX;
+            offsetY += moveY;
+            changed = true;
+        }
+
         if (scroll != 0)
         {
             float zoomFactor = 1f - scroll * zoomSpeed * Time.deltaTime;
             scale *= zoomFactor;
+            scale = Mathf.Clamp(scale, 1f, 100f);
+            changed = true;
         }
+
+        return changed;
     }
 
     Color GetColorFromValue(float value)
@@ -92,5 +128,25 @@ public class PerlinNoiseGenerator : MonoBehaviour
         Color value = Color.Lerp(ix0, ix1, sy);
 
         return value;
+    }
+
+    float FBM(float x, float y)
+    {
+        float total = 0;
+        float frequency = 1;
+        float amplitude = 1;
+        float maxValue = 0;
+
+        for (int i = 0; i < octaves; i++)
+        {
+            total += Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+
+            maxValue += amplitude;
+
+            amplitude *= persistence;
+            frequency *= lacunarity;
+        }
+
+        return total / maxValue;
     }
 }
