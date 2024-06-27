@@ -22,21 +22,30 @@ public class PerlinNoiseGenerator : MonoBehaviour
     public float lacunarity = 3.0f;
     public ColorInterval[] colorIntervals;
 
+    [Header("Shader")]
+    public ComputeShader computeShader;
+
 
     private float offsetX = 100f;
     private float offsetY = 100f;
-    private Color[] colorCache;
+    private ComputeBuffer buffer;
+
+
+    public RenderTexture renderTexture;
     private MeshRenderer rend;
-    private Texture2D texture;
 
 
     // Start is called before the first frame update
     void Start()
     {
         rend = GetComponent<MeshRenderer>();
-        texture = new Texture2D(width, height);
-        rend.material.mainTexture = texture;
-        colorCache = new Color[width * height];
+
+        renderTexture = new RenderTexture(width, height, 24);
+        renderTexture.enableRandomWrite = true;
+        renderTexture.Create();
+        rend.material.mainTexture = renderTexture;
+        ComputeBufferData();
+
         GenerateNoise();
     }
 
@@ -50,24 +59,29 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
     }
   
+    // Generate the noise using the compute shader
     void GenerateNoise()
     {
-       
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                float xCoord = ((float)x - width / 2) / width * scale + offsetX;
-                float yCoord = ((float)y - height / 2) / height * scale + offsetY;
 
-                float sample = FBM(xCoord, yCoord);
-                Color noiseColor = GetColorFromValue(sample);
-                colorCache[x + y * width] = noiseColor;
+        int kernelHandle = computeShader.FindKernel("CSMain");
 
-            }
-        }
-        texture.SetPixels(colorCache);
-        texture.Apply();
+        // ComputeBufferData();
+        computeShader.SetInt("width", width);
+        computeShader.SetInt("height", height);
+        computeShader.SetFloat("scale", scale);
+        computeShader.SetFloat("offsetX", offsetX);
+        computeShader.SetFloat("offsetY", offsetY);
+        computeShader.SetInt("octaves", octaves);
+        computeShader.SetFloat("persistence", persistence);
+        computeShader.SetFloat("lacunarity", lacunarity);
+        computeShader.SetFloat("numColors", colorIntervals.Length);
+
+        computeShader.SetTexture(kernelHandle, "Result", renderTexture);
+        computeShader.SetBuffer(kernelHandle, "ColorIntervals", buffer);
+
+        int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
+        computeShader.Dispatch(kernelHandle, threadGroupsX, threadGroupsY, 1);
     }
 
     bool UserInput()
@@ -97,6 +111,13 @@ public class PerlinNoiseGenerator : MonoBehaviour
         return changed;
     }
 
+    void ComputeBufferData()
+    {
+        int totalSize = 2 * sizeof(float) + 2 * 4 * sizeof(float);
+        buffer = new ComputeBuffer(colorIntervals.Length, totalSize);
+        buffer.SetData(colorIntervals);
+    }
+
     Color GetColorFromValue(float value)
     {
 
@@ -118,7 +139,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         float sx = x0 - Mathf.Floor(x0);
         float sy = y0 - Mathf.Floor(y0);
 
-        Color n00 = GetColorFromValue(Mathf.PerlinNoise(x0 , y0));
+        Color n00 = GetColorFromValue(Mathf.PerlinNoise(x0, y0));
         Color n10 = GetColorFromValue(Mathf.PerlinNoise(x1, y0));
         Color n01 = GetColorFromValue(Mathf.PerlinNoise(x0, y1));
         Color n11 = GetColorFromValue(Mathf.PerlinNoise(x1, y1));
@@ -130,23 +151,4 @@ public class PerlinNoiseGenerator : MonoBehaviour
         return value;
     }
 
-    float FBM(float x, float y)
-    {
-        float total = 0;
-        float frequency = 1;
-        float amplitude = 1;
-        float maxValue = 0;
-
-        for (int i = 0; i < octaves; i++)
-        {
-            total += Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
-
-            maxValue += amplitude;
-
-            amplitude *= persistence;
-            frequency *= lacunarity;
-        }
-
-        return total / maxValue;
-    }
 }
