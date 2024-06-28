@@ -12,7 +12,7 @@ Shader "Custom/SurfaceShader"
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows
+        #pragma surface surf Standard
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
@@ -34,11 +34,8 @@ Shader "Custom/SurfaceShader"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             float2 uv = IN.uv_MainTex;
-            // Albedo comes from a texture tinted by color
             fixed4 c =  uv.x * _Color;
             o.Emission = c.rgb;
-            // Metallic and smoothness come from slider variables
-            o.Alpha = c.a;
         }
         ENDCG
     }
