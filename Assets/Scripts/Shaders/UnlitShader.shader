@@ -45,10 +45,12 @@ Shader "Custom/UnlitShader"
             {
                 v2f o;
 
+                // Manipulating the vertex in game space before projection to camera
                 v.vertex.y = sin(v.vertex.x + 2* _Time.y)*0.5;
 
                 // Project onto camera space (CLIP = camera view)
                 o.vertex = UnityObjectToClipPos(v.vertex);
+
 
                 // Pass the texture
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
