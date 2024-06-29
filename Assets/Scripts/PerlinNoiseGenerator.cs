@@ -11,7 +11,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
     public float translateSpeed = 10f;
 
     [Range(1, 100)]
-    public float zoomSpeed = 5f;
+    public float zoomSpeed = 1.00001f;
 
 
     [Header("Noise Settings")]
@@ -31,6 +31,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
     private float offsetY = 100f;
     private int type = 0;
     private int kernelHandle;
+    [SerializeField]
     private float scale = 4;
 
     // Buffer that will store the color intervals for the compute shader
@@ -99,22 +100,30 @@ public class PerlinNoiseGenerator : MonoBehaviour
     {
         bool changed = false;
 
-        float moveX  = Input.GetAxis("Horizontal") * Time.deltaTime * translateSpeed;
-        float moveY = Input.GetAxis("Vertical") * Time.deltaTime * translateSpeed;
+        float moveX  = Input.GetAxis("Horizontal");
+        float moveY = Input.GetAxis("Vertical");
+        Vector2 move = new Vector2(moveX, moveY);
+
+        if(move.magnitude > 1)
+            move = move.normalized;
+
+        move *= Time.deltaTime * translateSpeed * scale;
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
 
         if (moveX != 0 || moveY != 0)
         {
-            offsetX += moveX;
-            offsetY += moveY;
+            offsetX += move.x;
+            offsetY += move.y;
             changed = true;
         }
 
         if (scroll != 0)
         {
-            float zoomFactor = 1f - scroll * zoomSpeed * Time.deltaTime;
-            scale *= zoomFactor;
+            if(scroll > 0)
+                scale /= zoomSpeed;
+            else
+                scale *= zoomSpeed;
             scale = Mathf.Clamp(scale, 0.1f, 500f);
             changed = true;
         }

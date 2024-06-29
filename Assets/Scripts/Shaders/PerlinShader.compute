@@ -92,7 +92,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float yCoord = (((float) id.y - height / 2) / (float) height) * scale + offsetY;
 
     float sample = FBM(xCoord, yCoord);
-    
+ 
     Result[id.xy] = GetColorFromValue(sample);
 
 }
