@@ -18,6 +18,7 @@ struct ColorInterval
 
 // RWTexture2D<float4> is a type of texture that can be read and written to
 RWTexture2D<float4> Result;
+RWTexture2D<float4> HeightMap;
 
 // RWStructuredBuffer<ColorInterval> is a type of array that can be read and written to
 RWStructuredBuffer<ColorInterval> ColorIntervals;
@@ -91,8 +92,9 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float xCoord = (((float) id.x - width / 2) / (float) width) * scale + offsetX;
     float yCoord = (((float) id.y - height / 2) / (float) height) * scale + offsetY;
 
-    float sample = FBM(xCoord, yCoord);
+    float sampled = FBM(xCoord, yCoord);
+    HeightMap[id.xy] = float4(sampled,sampled,sampled,1);
  
-    Result[id.xy] = GetColorFromValue(sample);
+    Result[id.xy] = GetColorFromValue(sampled);
 
 }

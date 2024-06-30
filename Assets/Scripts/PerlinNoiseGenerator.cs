@@ -25,19 +25,26 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
     // Compute Shader that will generate the noise
     [Header("Shader")]
-    public ComputeShader computeShader;
+    public ComputeShader noiseShader;
+    public ComputeShader postProcessingShader;
 
     private float offsetX = 100f;
     private float offsetY = 100f;
     private int type = 0;
-    private int kernelHandle;
+
+    private int kernelHandleNoise;
+    private int kernelHandlePostProcessing;
+
     [SerializeField]
     private float scale = 4;
 
     // Buffer that will store the color intervals for the compute shader
     private ComputeBuffer buffer;
 
-    public RenderTexture renderTexture;
+    private RenderTexture heightMap;
+    private RenderTexture renderTextureNoiseColored;
+    private RenderTexture renderTexturePostProcessed;
+
     private MeshRenderer rend;
 
 
@@ -47,56 +54,96 @@ public class PerlinNoiseGenerator : MonoBehaviour
         // Get the mesh renderer and set the render texture to it
         rend = GetComponent<MeshRenderer>();
 
-        renderTexture = new RenderTexture(width, height, 24);
-        renderTexture.enableRandomWrite = true;
-        renderTexture.Create();
-        rend.material.mainTexture = renderTexture;
+        SetUpTexture(out renderTextureNoiseColored);
+        SetUpTexture(out renderTexturePostProcessed);
+        SetUpTexture(out heightMap);
 
-        // Find the kernel handle for the compute shader
-        kernelHandle = computeShader.FindKernel("CSMain");
+        rend.material.mainTexture = renderTexturePostProcessed;
 
-        // Compute the buffer data - this contains the color intervals
-        ComputeBufferData();
+        // Find the kernel handle for the compute shaders
+        kernelHandleNoise = noiseShader.FindKernel("CSMain");
+        kernelHandlePostProcessing = postProcessingShader.FindKernel("CSMain");
+
+        StetUpFixedShaderData();
+
         GenerateNoise();
     }
 
-    // Update is called once per frame
     void Update()
-    {   
+    {
         if (UserInput())
         {
-            GenerateNoise();
+            // If the user input has changed, generate the noise again
         }
+        GenerateNoise();
 
     }
-  
-    // Generate the noise using the compute shader
-    void GenerateNoise()
-    {
-        // Set the input parameters for the compute shader
-        computeShader.SetInt("width", width);
-        computeShader.SetInt("height", height);
-        computeShader.SetFloat("scale", scale);
-        computeShader.SetFloat("offsetX", offsetX);
-        computeShader.SetFloat("offsetY", offsetY);
-        computeShader.SetInt("octaves", octaves);
-        computeShader.SetFloat("persistence", persistence);
-        computeShader.SetFloat("lacunarity", lacunarity);
-        computeShader.SetFloat("numColors", colorIntervals.Length);
-        computeShader.SetFloat("type", type);
 
-        computeShader.SetTexture(kernelHandle, "Result", renderTexture);
-        computeShader.SetBuffer(kernelHandle, "ColorIntervals", buffer);
+    // Generate the noise using the compute shader
+    private void GenerateNoise()
+    {
+        // Fixed shader data should not be inisde the loop but it is here for debugging purposes
+        StetUpFixedShaderData(); // if we have this here => Memory leak
+        SetUpDynamicShaderData();
+
 
         // Compute the number of thread groups: width and height divided by number of workers (8 by 8 workers)
         int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
         int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
 
         // Dispatch the compute shader
-        computeShader.Dispatch(kernelHandle, threadGroupsX, threadGroupsY, 1);
+        noiseShader.Dispatch(kernelHandleNoise, threadGroupsX, threadGroupsY, 1);
+
+        postProcessingShader.Dispatch(kernelHandlePostProcessing, threadGroupsX, threadGroupsY, 1);
     }
 
-    bool UserInput()
+    private void StetUpFixedShaderData()
+    {
+        // Compute the buffer data - this contains the color intervals
+        ComputeBufferData();
+
+        // Initialize the compute shader parameters
+        noiseShader.SetInt("width", width);
+        noiseShader.SetInt("height", height);
+        postProcessingShader.SetInt("width", width);
+        postProcessingShader.SetInt("height", height);
+
+        // Set the input parameters for the post processing compute shader
+        // Post processing will take the noise texture and apply a post processing effect to it
+
+        postProcessingShader.SetTexture(kernelHandlePostProcessing, "Result", renderTexturePostProcessed);
+
+        // The input texture is the noise texture compute by the previous compute shader both colored and the original grayscale
+        postProcessingShader.SetTexture(kernelHandlePostProcessing, "Input", renderTextureNoiseColored);
+        postProcessingShader.SetTexture(kernelHandlePostProcessing, "HeightMap", heightMap);
+
+        noiseShader.SetTexture(kernelHandleNoise, "HeightMap", heightMap);
+        noiseShader.SetTexture(kernelHandleNoise, "Result", renderTextureNoiseColored);
+        noiseShader.SetBuffer(kernelHandleNoise, "ColorIntervals", buffer);
+    }
+
+    private void SetUpDynamicShaderData()
+    {
+        // Set the input parameters for the compute shader
+
+        noiseShader.SetFloat("scale", scale);
+        noiseShader.SetFloat("offsetX", offsetX);
+        noiseShader.SetFloat("offsetY", offsetY);
+        noiseShader.SetInt("octaves", octaves);
+        noiseShader.SetFloat("persistence", persistence);
+        noiseShader.SetFloat("lacunarity", lacunarity);
+        noiseShader.SetFloat("numColors", colorIntervals.Length);
+        noiseShader.SetFloat("type", type);
+    }
+
+    private void SetUpTexture(out RenderTexture texture)
+    {
+        texture = new RenderTexture(width, height, 24);
+        texture.enableRandomWrite = true;
+        texture.Create();
+    }
+
+    private bool UserInput()
     {
         bool changed = false;
 
@@ -137,7 +184,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         GenerateNoise();
     }
 
-    void ComputeBufferData()
+    private void ComputeBufferData()
     {
         int totalSize = 2 * sizeof(float) + 2 * 4 * sizeof(float);
         buffer = new ComputeBuffer(colorIntervals.Length, totalSize);
@@ -146,7 +193,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
 
     // This code is not used but it is a good example of how to generate the noise using the CPU
-    Color GetColorFromValue(float value)
+    private Color GetColorFromValue(float value)
     {
 
         foreach(ColorInterval interval in colorIntervals)
@@ -157,7 +204,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         return new Color(0.5f,0.5f,0.5f);
     }
 
-    Color GetBilinearInterpolatedColor(int xCoord, int yCoord)
+    private Color GetBilinearInterpolatedColor(int xCoord, int yCoord)
     {
         float x0 = (float)xCoord / width * scale + offsetX;
         float y0 = (float)yCoord / height * scale + offsetY;
