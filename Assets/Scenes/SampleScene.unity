@@ -157,6 +157,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 1024
   height: 1024
+  scale: 4
   translateSpeed: 2
   zoomSpeed: 1.1
   octaves: 9
@@ -185,7 +186,9 @@ MonoBehaviour:
     colorEnd: {r: 1, g: 1, b: 1, a: 1}
   noiseShader: {fileID: 7200000, guid: 00475cc45bb5de646a1c1f41ac8b1f83, type: 3}
   postProcessingShader: {fileID: 7200000, guid: a957368db7d5d5b4ab8a67c1de75d853, type: 3}
-  scale: 4
+  stepSize: 0.1
+  maxSteps: 100
+  lightPos: {x: 1, y: 1, z: 1}
 --- !u!23 &63177772
 MeshRenderer:
   m_ObjectHideFlags: 0

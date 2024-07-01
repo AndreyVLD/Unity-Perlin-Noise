@@ -6,6 +6,9 @@ public class PerlinNoiseGenerator : MonoBehaviour
     public int width = 256;
     public int height = 256;
 
+    [SerializeField]
+    private float scale = 4;
+
     [Header("Speed Settings")]
     [Range(1, 100)]
     public float translateSpeed = 10f;
@@ -28,6 +31,13 @@ public class PerlinNoiseGenerator : MonoBehaviour
     public ComputeShader noiseShader;
     public ComputeShader postProcessingShader;
 
+    [Header("Post Processing Settings")]
+    [Range(0, 10)]
+    public float stepSize = 0.1f;
+    [Range(50, 10000)]
+    public int maxSteps = 100;
+    public Vector3 lightPos = new Vector3(1, 1, 1);
+
     private float offsetX = 100f;
     private float offsetY = 100f;
     private int type = 0;
@@ -35,8 +45,6 @@ public class PerlinNoiseGenerator : MonoBehaviour
     private int kernelHandleNoise;
     private int kernelHandlePostProcessing;
 
-    [SerializeField]
-    private float scale = 4;
 
     // Buffer that will store the color intervals for the compute shader
     private ComputeBuffer buffer;
@@ -107,6 +115,9 @@ public class PerlinNoiseGenerator : MonoBehaviour
     {
         postProcessingShader.SetInt("width", width);
         postProcessingShader.SetInt("height", height);
+        postProcessingShader.SetInt("maxSteps", maxSteps);
+        postProcessingShader.SetFloat("stepSize", stepSize);
+        postProcessingShader.SetVector("lightPos", new Vector4(lightPos.x,lightPos.y,lightPos.z,0));
 
         postProcessingShader.SetTexture(kernelHandlePostProcessing, "Result", renderTexturePostProcessed);
 

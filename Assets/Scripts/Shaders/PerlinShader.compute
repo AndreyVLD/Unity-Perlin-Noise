@@ -84,6 +84,13 @@ float4 GetColorFromValue(float value)
     return float4(0, 0, 0, 1);
 }
 
+float4 GetHeight(float value)
+{
+	 if(value <= ColorIntervals[0].end)
+        return float4(0,0,0,1);
+    return float4(value,value,value,1);
+}
+
 // The main function that will be called by the C# script
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
@@ -93,8 +100,9 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float yCoord = (((float) id.y - height / 2) / (float) height) * scale + offsetY;
 
     float sampled = FBM(xCoord, yCoord);
-    HeightMap[id.xy] = float4(sampled,sampled,sampled,1);
+    float4 selectedColor = GetColorFromValue(sampled);
  
-    Result[id.xy] = GetColorFromValue(sampled);
+    Result[id.xy] = selectedColor;
 
+    HeightMap[id.xy] = GetHeight(sampled);
 }

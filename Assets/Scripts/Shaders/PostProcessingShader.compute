@@ -7,14 +7,51 @@ RWTexture2D<float4> Result;  // Output texture
 RWTexture2D<float4> Input;   // Input colored texture - Full RGBA
 RWTexture2D<float4> HeightMap;  // Input heightmap texture [0,1] GrayScale - actually (sample,sample,sample,1)
 
-uint width;
-uint height;
+float3 lightPos;
+int maxSteps;
+float stepSize;
+
+int width;
+int height;
+
+float ComputeShadow(float3 worldPos, float initHeight)
+{
+    float3 rayDir = normalize(lightPos - worldPos);
+    float shadow = 1.0;
+
+    for(int i = 1; i<=maxSteps; i++)
+    {
+        float3 samplePos = worldPos + rayDir * stepSize * i;
+        int2 sampleCoords = int2(samplePos.x, samplePos.z);
+
+        // check bounds
+        if (sampleCoords.x < 0 || sampleCoords.x >= width || sampleCoords.y < 0 || sampleCoords.y >= height)
+            break;
+
+        float sampleHeight = HeightMap[sampleCoords].r;
+
+        if (sampleHeight > initHeight)
+        {
+            shadow = 0.5; 
+            break;
+        }
+    }
+    return shadow;
+    
+}
 
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
   
     float4 input_color = Input[id.xy];   
-    float4 height = HeightMap[id.xy];
-    Result[id.xy] = height;
+    float heightVal = HeightMap[id.xy].r;
+    float3 worldPos = float3(id.x,heightVal,id.y);
+
+    float shadow = ComputeShadow(worldPos, heightVal);   
+    Result[id.xy] = shadow*input_color;
 }
+
+
+
+
