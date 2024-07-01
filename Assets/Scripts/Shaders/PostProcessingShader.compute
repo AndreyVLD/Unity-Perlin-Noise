@@ -5,7 +5,7 @@
 // with cs.SetTexture
 RWTexture2D<float4> Result;  // Output texture
 RWTexture2D<float4> Input;   // Input colored texture - Full RGBA
-RWTexture2D<float4> HeightMap;  // Input heightmap texture [0,1] GrayScale
+RWTexture2D<float4> HeightMap;  // Input heightmap texture [0,1] GrayScale - actually (sample,sample,sample,1)
 
 uint width;
 uint height;

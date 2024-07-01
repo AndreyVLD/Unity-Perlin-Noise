@@ -183,9 +183,9 @@ MonoBehaviour:
     end: 1
     colorStart: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     colorEnd: {r: 1, g: 1, b: 1, a: 1}
-  computeShader: {fileID: 7200000, guid: 00475cc45bb5de646a1c1f41ac8b1f83, type: 3}
+  noiseShader: {fileID: 7200000, guid: 00475cc45bb5de646a1c1f41ac8b1f83, type: 3}
+  postProcessingShader: {fileID: 7200000, guid: a957368db7d5d5b4ab8a67c1de75d853, type: 3}
   scale: 4
-  renderTexture: {fileID: 0}
 --- !u!23 &63177772
 MeshRenderer:
   m_ObjectHideFlags: 0

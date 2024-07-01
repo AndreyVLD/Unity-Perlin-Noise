@@ -64,7 +64,11 @@ public class PerlinNoiseGenerator : MonoBehaviour
         kernelHandleNoise = noiseShader.FindKernel("CSMain");
         kernelHandlePostProcessing = postProcessingShader.FindKernel("CSMain");
 
-        StetUpFixedShaderData();
+        // Compute the buffer data - this contains the color intervals
+        ComputeBufferData();
+
+        SetUpNoiseShader();
+        SetUpPostProcessShader();
 
         GenerateNoise();
     }
@@ -81,48 +85,37 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
     // Generate the noise using the compute shader
     private void GenerateNoise()
-    {
-        // Fixed shader data should not be inisde the loop but it is here for debugging purposes
-        StetUpFixedShaderData(); // if we have this here => Memory leak
-        SetUpDynamicShaderData();
-
-
-        // Compute the number of thread groups: width and height divided by number of workers (8 by 8 workers)
-        int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
-        int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
-
-        // Dispatch the compute shader
-        noiseShader.Dispatch(kernelHandleNoise, threadGroupsX, threadGroupsY, 1);
-
-        postProcessingShader.Dispatch(kernelHandlePostProcessing, threadGroupsX, threadGroupsY, 1);
+    { 
+        NoiseShader();
+        SetUpPostProcessShader(); // Should not be here!
+        PostProcessShader();
     }
 
-    private void StetUpFixedShaderData()
+    // Initialize the compute shader parameters
+    private void SetUpNoiseShader()
     {
-        // Compute the buffer data - this contains the color intervals
-        ComputeBufferData();
-
-        // Initialize the compute shader parameters
         noiseShader.SetInt("width", width);
         noiseShader.SetInt("height", height);
-        postProcessingShader.SetInt("width", width);
-        postProcessingShader.SetInt("height", height);
-
-        // Set the input parameters for the post processing compute shader
-        // Post processing will take the noise texture and apply a post processing effect to it
-
-        postProcessingShader.SetTexture(kernelHandlePostProcessing, "Result", renderTexturePostProcessed);
-
-        // The input texture is the noise texture compute by the previous compute shader both colored and the original grayscale
-        postProcessingShader.SetTexture(kernelHandlePostProcessing, "Input", renderTextureNoiseColored);
-        postProcessingShader.SetTexture(kernelHandlePostProcessing, "HeightMap", heightMap);
 
         noiseShader.SetTexture(kernelHandleNoise, "HeightMap", heightMap);
         noiseShader.SetTexture(kernelHandleNoise, "Result", renderTextureNoiseColored);
         noiseShader.SetBuffer(kernelHandleNoise, "ColorIntervals", buffer);
     }
 
-    private void SetUpDynamicShaderData()
+    // Post processing will take the noise texture and apply a post processing effect to it
+    private void SetUpPostProcessShader()
+    {
+        postProcessingShader.SetInt("width", width);
+        postProcessingShader.SetInt("height", height);
+
+        postProcessingShader.SetTexture(kernelHandlePostProcessing, "Result", renderTexturePostProcessed);
+
+        // The input texture is the noise texture compute by the previous compute shader both colored and the original grayscale
+        postProcessingShader.SetTexture(kernelHandlePostProcessing, "Input", renderTextureNoiseColored);
+        postProcessingShader.SetTexture(kernelHandlePostProcessing, "HeightMap", heightMap);
+    }
+
+    private void NoiseShader()
     {
         // Set the input parameters for the compute shader
 
@@ -134,6 +127,22 @@ public class PerlinNoiseGenerator : MonoBehaviour
         noiseShader.SetFloat("lacunarity", lacunarity);
         noiseShader.SetFloat("numColors", colorIntervals.Length);
         noiseShader.SetFloat("type", type);
+
+        // Compute the number of thread groups: width and height divided by number of workers (8 by 8 workers)
+        int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
+
+        // Dispatch the compute shader
+        noiseShader.Dispatch(kernelHandleNoise, threadGroupsX, threadGroupsY, 1);
+    }
+
+    private void PostProcessShader()
+    {
+        // Compute the number of thread groups: width and height divided by number of workers (8 by 8 workers)
+        int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
+
+        postProcessingShader.Dispatch(kernelHandlePostProcessing, threadGroupsX, threadGroupsY, 1);
     }
 
     private void SetUpTexture(out RenderTexture texture)
