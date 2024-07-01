@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PerlinNoiseGenerator : MonoBehaviour
@@ -117,7 +118,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         postProcessingShader.SetInt("height", height);
         postProcessingShader.SetInt("maxSteps", maxSteps);
         postProcessingShader.SetFloat("stepSize", stepSize);
-        postProcessingShader.SetVector("lightPos", new Vector4(lightPos.x,lightPos.y,lightPos.z,0));
+        postProcessingShader.SetVector("lightPos", lightPos);
 
         postProcessingShader.SetTexture(kernelHandlePostProcessing, "Result", renderTexturePostProcessed);
 

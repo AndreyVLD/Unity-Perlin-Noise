@@ -14,27 +14,45 @@ float stepSize;
 int width;
 int height;
 
-float ComputeShadow(float3 worldPos, float initHeight)
+// Bilinearly inerpolate between 4 heights
+	
+float GetHeight(float3 samplePos)
 {
-    float3 rayDir = normalize(lightPos - worldPos);
+    int2 sampleCoords = int2(samplePos.x, samplePos.z);
+
+    return HeightMap[sampleCoords].r;
+
+}
+
+float ComputeShadow(float3 worldPos)
+{
+    float3 sunDir = lightPos - float3(width/2.0,0,height/2.0);
+    float3 rayDir = normalize(sunDir);
     float shadow = 1.0;
+    float3 samplePos = worldPos + rayDir * 0.1;
 
     for(int i = 1; i<=maxSteps; i++)
     {
-        float3 samplePos = worldPos + rayDir * stepSize * i;
+
         int2 sampleCoords = int2(samplePos.x, samplePos.z);
 
         // check bounds
         if (sampleCoords.x < 0 || sampleCoords.x >= width || sampleCoords.y < 0 || sampleCoords.y >= height)
             break;
 
-        float sampleHeight = HeightMap[sampleCoords].r;
-
-        if (sampleHeight > initHeight)
+        float sampleHeight = GetHeight(samplePos);
+        if (sampleHeight > samplePos.y)
         {
             shadow = 0.5; 
             break;
         }
+
+        if(samplePos.y > 1)
+		{
+			break;
+		}
+
+        samplePos += rayDir * max(stepSize,(samplePos.y-sampleHeight)*0.05);
     }
     return shadow;
     
@@ -48,8 +66,8 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     float heightVal = HeightMap[id.xy].r;
     float3 worldPos = float3(id.x,heightVal,id.y);
 
-    float shadow = ComputeShadow(worldPos, heightVal);   
-    Result[id.xy] = shadow*input_color;
+    float shadow = ComputeShadow(worldPos);   
+    Result[id.xy] = float4(shadow*input_color.rgb,1);
 }
 
 
