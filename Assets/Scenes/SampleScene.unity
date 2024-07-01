@@ -187,8 +187,8 @@ MonoBehaviour:
   noiseShader: {fileID: 7200000, guid: 00475cc45bb5de646a1c1f41ac8b1f83, type: 3}
   postProcessingShader: {fileID: 7200000, guid: a957368db7d5d5b4ab8a67c1de75d853, type: 3}
   stepSize: 0.1
-  maxSteps: 100
-  lightPos: {x: 1, y: 1, z: 1}
+  maxSteps: 200
+  lightPos: {x: 0, y: 1, z: 0}
 --- !u!23 &63177772
 MeshRenderer:
   m_ObjectHideFlags: 0
