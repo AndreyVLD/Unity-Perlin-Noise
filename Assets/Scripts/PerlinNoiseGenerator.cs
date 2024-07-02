@@ -29,6 +29,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
 
     // Compute Shader that will generate the noise
     [Header("Shader")]
+    public Material material;
     public ComputeShader noiseShader;
     public ComputeShader postProcessingShader;
 
@@ -61,13 +62,13 @@ public class PerlinNoiseGenerator : MonoBehaviour
     void Start()
     {
         // Get the mesh renderer and set the render texture to it
-        rend = GetComponent<MeshRenderer>();
+
 
         SetUpTexture(out renderTextureNoiseColored);
         SetUpTexture(out renderTexturePostProcessed);
         SetUpTexture(out heightMap);
 
-        rend.material.mainTexture = renderTexturePostProcessed;
+        material.mainTexture = renderTexturePostProcessed;
 
         // Find the kernel handle for the compute shaders
         kernelHandleNoise = noiseShader.FindKernel("CSMain");
@@ -139,6 +140,7 @@ public class PerlinNoiseGenerator : MonoBehaviour
         noiseShader.SetFloat("lacunarity", lacunarity);
         noiseShader.SetFloat("numColors", colorIntervals.Length);
         noiseShader.SetFloat("type", type);
+        noiseShader.SetFloat("aspectRatio", (float)Screen.width /Screen.height);
 
         // Compute the number of thread groups: width and height divided by number of workers (8 by 8 workers)
         int threadGroupsX = Mathf.CeilToInt(width / 8.0f);

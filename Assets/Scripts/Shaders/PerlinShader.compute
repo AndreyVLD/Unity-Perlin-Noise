@@ -34,6 +34,7 @@ float persistence;
 float lacunarity;
 uint numColors;
 uint type;
+float aspectRatio;
 
 float GetNoise(float2 input)
 {
@@ -95,9 +96,8 @@ float4 GetHeight(float value)
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
-
-    float xCoord = (((float) id.x - width / 2) / (float) width) * scale + offsetX;
-    float yCoord = (((float) id.y - height / 2) / (float) height) * scale + offsetY;
+    float xCoord = ((float) id.x / width - 0.5) * aspectRatio * scale + offsetX;
+    float yCoord = ((float) id.y / height - 0.5) * scale + offsetY;
 
     float sampled = FBM(xCoord, yCoord);
     float4 selectedColor = GetColorFromValue(sampled);
