@@ -87,7 +87,7 @@ float4 GetColorFromValue(float value)
 float4 GetHeight(float value)
 {
 	 if(value <= ColorIntervals[0].end)
-        return float4(0,0,0,1);
+        return float4(ColorIntervals[1].start,ColorIntervals[1].start,ColorIntervals[1].start,1);
     return float4(value,value,value,1);
 }
 

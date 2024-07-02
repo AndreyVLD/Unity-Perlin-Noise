@@ -87,8 +87,9 @@ public class PerlinNoiseGenerator : MonoBehaviour
         if (UserInput())
         {
             // If the user input has changed, generate the noise again
+            GenerateNoise();
         }
-        GenerateNoise();
+        
 
     }
 
@@ -96,7 +97,6 @@ public class PerlinNoiseGenerator : MonoBehaviour
     private void GenerateNoise()
     { 
         NoiseShader();
-        SetUpPostProcessShader(); // Should not be here!
         PostProcessShader();
     }
 
