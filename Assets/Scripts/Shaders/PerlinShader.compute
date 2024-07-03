@@ -96,6 +96,9 @@ float4 GetHeight(float value)
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
+    if (id.x >= width || id.y >= height)
+		return;
+        
     float xCoord = ((float) id.x / width - 0.5) * aspectRatio * scale + offsetX;
     float yCoord = ((float) id.y / height - 0.5) * scale + offsetY;
 

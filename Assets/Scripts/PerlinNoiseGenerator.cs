@@ -4,8 +4,10 @@ using UnityEngine;
 public class PerlinNoiseGenerator : MonoBehaviour
 {
     [Header("General Settings")]
-    public int width = 256;
-    public int height = 256;
+    [SerializeField]
+    private int width;
+    [SerializeField]
+    private int height;
 
     [SerializeField]
     private float scale = 4;
@@ -62,6 +64,8 @@ public class PerlinNoiseGenerator : MonoBehaviour
     void Start()
     {
         // Get the mesh renderer and set the render texture to it
+        height = Screen.height;
+        width = Screen.width;
 
 
         SetUpTexture(out renderTextureNoiseColored);
